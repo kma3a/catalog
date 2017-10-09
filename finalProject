@@ -1,1 +1,64 @@
+filelocation=${CATALOG_LOCATION:=$HOME}
+filename=catalog
+file=$filelocation/$filename
+
+echo "$#"
+
+createfile () {
+  if [ ! -e "$file" ] ; then
+    echo 'That file does not exist would you like to create it (y\n}? \c'
+    read makefile
+    if [ "$makefile" = "y" ] ; then
+      touch $file
+    else
+      exit 1
+    fi
+  fi
+}
+
+search () {
+  echo "$*";
+  sh $file "$1";
+}
+
+
+if [ "$#" = 0 ] ; then 
+  valid_choice=
+
+  until [ -n "$valid_choice" ]
+  do 
+    createfile
+    
+    echo '
+      would you like to:
+      
+      1. search the catalog
+      2. add to the catalog
+      3. edit a record
+      4. remove a record
+      5. view all records
+      6. exit the program
+
+      Please select one of the above (1-6): \c'
+
+      read choice 
+
+      case "$choice"
+      in
+      6) echo "Are you sure you would like to exit? (y/n) \c"
+        read answer
+        if [ "$answer" = "y" ] ; then
+          exit 0
+        fi;;
+      *) echo "Please enter a valid number (1-5)";;
+      esac
+
+  done
+else
+  if [ ! -e "$file" ] ; then
+    exit 1
+  fi
+
+fi
+
 
