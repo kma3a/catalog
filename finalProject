@@ -2,8 +2,6 @@ filelocation=${CATALOG_LOCATION:=$HOME}
 filename=catalog
 file=$filelocation/$filename
 
-echo "$#"
-
 createfile () {
   if [ ! -e "$file" ] ; then
     echo 'That file does not exist would you like to create it (y\n}? \c'
@@ -17,13 +15,27 @@ createfile () {
 }
 
 search () {
-  echo "$*";
-  sh $file "$1";
+  matches=$(grep -i "$1" $file)
+  display "$matches"
+}
+
+display () {
+  linenumber=$(echo "$1" | wc -l)
+  currentlinenum=1
+  while [ "$currentlinenum" -le "$linenumber" ]
+  do
+    currentline=$(echo "$1" | sed -n ${currentlinenum}p)
+    echo $currentline
+    currentlinenum=$(expr $currentlinenum + 1)
+  done
+
 }
 
 
 if [ "$#" = 0 ] ; then 
   valid_choice=
+
+  echo "Welcome to your book records!\n"
 
   until [ -n "$valid_choice" ]
   do 
@@ -45,12 +57,40 @@ if [ "$#" = 0 ] ; then
 
       case "$choice"
       in
+      1) echo "What book would you like to look up? \c"
+         read answer
+         if [ -z "$answer" ] ; then
+           echo "Invalid input. Canceling search."
+         else 
+           search $answer
+         fi;;
+      2) finished= 
+        until [ -n "$finished" ]
+        do 
+          echo "What is the title of the book would you like to add? \c"
+           read booktitle
+           echo "What is the name of the author? \c"
+           read author
+           echo "What genre is the book? \c"
+           read genre
+           echo "Have you read the book? (y/n) \c"
+           read readstatus
+           echo "$booktitle\t$author\t$genre\t$readstatus" >> $file
+           sort -o $file $file
+           echo "Would you like to add another book? (y/n) \c"
+           read addanother
+           if [ "$addanother" != "y" ] ; then
+             finished=TRUE
+           fi
+        done;;
+      5) allbooks=$(cat "$file")
+         echo $allbooks;;
       6) echo "Are you sure you would like to exit? (y/n) \c"
         read answer
         if [ "$answer" = "y" ] ; then
           exit 0
         fi;;
-      *) echo "Please enter a valid number (1-5)";;
+      *) echo "Please enter a valid input";;
       esac
 
   done
