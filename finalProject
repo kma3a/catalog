@@ -25,7 +25,11 @@ display () {
   while [ "$currentlinenum" -le "$linenumber" ]
   do
     currentline=$(echo "$1" | sed -n ${currentlinenum}p)
-    echo $currentline
+    title=$(echo "$currentline" | cut -f1)
+    author=$(echo "$currentline" | cut -f2)
+    genre=$(echo "$currentline" | cut -f3)
+    hasread=$(echo "$currentline" | cut -f4)
+    printf "Title:%-40.40s\tby: %s\n\tgenre: %-40.40s\tread book? %s\n" "$title" "$author" "$genre" "$hasread"
     currentlinenum=$(expr $currentlinenum + 1)
   done
 
@@ -83,8 +87,8 @@ if [ "$#" = 0 ] ; then
              finished=TRUE
            fi
         done;;
-      5) allbooks=$(cat "$file")
-         echo $allbooks;;
+      5) allbooks=$(grep "" "$file")
+        display "$allbooks";;
       6) echo "Are you sure you would like to exit? (y/n) \c"
         read answer
         if [ "$answer" = "y" ] ; then
