@@ -23,6 +23,7 @@ removal () {
   grep -v "$1" $file > /tmp/$filename
   mv /tmp/$filename $file
 }
+
 display () {
   linenumber=$(echo "$1" | wc -l)
   currentlinenum=1
@@ -36,6 +37,41 @@ display () {
     printf "Title:%-40.40s\tby: %s\n\tgenre: %-40.40s\tread book? %s\n" "$title" "$author" "$genre" "$hasread"
     currentlinenum=$(expr $currentlinenum + 1)
   done
+}
+
+
+
+editordelete () {
+  echo "What is the would you like to $1? \c"
+  read searchitem
+  if [ -z "$searchitem" ] ; then
+    echo "Invalid input. Canceling $1."
+  else
+    matches=$(grep -i "$searchitem" $file)
+    linenumber=$(echo "$matches" | wc -l)
+    if [ "$linenumber" -gt 1 ] ; then 
+      currentlinenum=1
+      foundmatch=
+      while [ -z "$foundmatch" -a "$currentlinenum" -le "$linenumber" ] 
+      do 
+        currentline=$(echo "$matches" | sed -n ${currentlinenum}p)
+        title=$(echo "$currentline" | cut -f1)
+        echo "Would you like to $1 $title? (y/n) \c"
+        read answer
+        if [ "$answer" = "y" ] ; then
+          if [ "$1" = "delete" ] ; then
+            removal "$currentline"
+          fi
+          foundmatch=TRUE
+        fi
+        currentlinenum=$(expr $currentlinenum + 1)
+      done
+    else
+      if [ "$1" = "delete" ] ; then
+        removal "$matches"
+      fi
+    fi
+  fi
 }
 
 
@@ -90,32 +126,7 @@ if [ "$#" = 0 ] ; then
              finished=TRUE
            fi
         done;;
-      4) echo "What is the would you like to remove? \c"
-         read removalsearch
-         if [ -z "$removalsearch" ] ; then
-           echo "Invalid input. Canceling removal."
-         else
-           matches=$(grep -i "$removalsearch" $file)
-           linenumber=$(echo "$matches" | wc -l)
-           if [ "$linenumber" -gt 1 ] ; then 
-             currentlinenum=1
-             foundmatch=
-             while [ -z "$foundmatch" ]
-             do 
-               currentline=$(echo "$matches" | sed -n ${currentlinenum}p)
-               title=$(echo "$currentline" | cut -f1)
-               echo "Would you like to delete $title? (y/n) \c"
-               read answer
-               if [ "$answer" = "y" ] ; then
-                 removal "$currentline"
-                 foundmatch=TRUE
-               fi
-               currentlinenum=$(expr $currentlinenum + 1)
-             done
-           else
-             removal "$matches"
-           fi
-         fi;;
+      4) editordelete "delete";;
       5) allbooks=$(grep "" "$file")
         display "$allbooks";;
       6) echo "Are you sure you would like to exit? (y/n) \c"
