@@ -19,6 +19,10 @@ search () {
   display "$matches"
 }
 
+removal () {
+  grep -v "$1" $file > /tmp/$filename
+  mv /tmp/$filename $file
+}
 display () {
   linenumber=$(echo "$1" | wc -l)
   currentlinenum=1
@@ -32,7 +36,6 @@ display () {
     printf "Title:%-40.40s\tby: %s\n\tgenre: %-40.40s\tread book? %s\n" "$title" "$author" "$genre" "$hasread"
     currentlinenum=$(expr $currentlinenum + 1)
   done
-
 }
 
 
@@ -87,6 +90,32 @@ if [ "$#" = 0 ] ; then
              finished=TRUE
            fi
         done;;
+      4) echo "What is the would you like to remove? \c"
+         read removalsearch
+         if [ -z "$removalsearch" ] ; then
+           echo "Invalid input. Canceling removal."
+         else
+           matches=$(grep -i "$removalsearch" $file)
+           linenumber=$(echo "$matches" | wc -l)
+           if [ "$linenumber" -gt 1 ] ; then 
+             currentlinenum=1
+             foundmatch=
+             while [ -z "$foundmatch" ]
+             do 
+               currentline=$(echo "$matches" | sed -n ${currentlinenum}p)
+               title=$(echo "$currentline" | cut -f1)
+               echo "Would you like to delete $title? (y/n) \c"
+               read answer
+               if [ "$answer" = "y" ] ; then
+                 removal "$currentline"
+                 foundmatch=TRUE
+               fi
+               currentlinenum=$(expr $currentlinenum + 1)
+             done
+           else
+             removal "$matches"
+           fi
+         fi;;
       5) allbooks=$(grep "" "$file")
         display "$allbooks";;
       6) echo "Are you sure you would like to exit? (y/n) \c"
