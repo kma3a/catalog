@@ -44,8 +44,9 @@ revise () {
   echo "$1" | tr "\t" "+" | sed "s/\([^+]*\)+\([^+]*\)+\([^+]*\)+\([^+]*\)/title: \1\+author: \2\+genre: \3\+readstatus: \4/" | tr "+" "\012" > /tmp/ed$$
   $editor /tmp/ed$$
   grep -v "^$1$" $file > /tmp/$filename
-  cat /tmp/ed$$ | tr '\012' '+' | sed "s/title: \([^+]*\)+author: \([^+]*\)+genre: \([^+]*\)+readstatus: \([^+]*\)/\1+\2+\3+\4/" | tr '+' '\t' >> /tmp/$filename
+  cat /tmp/ed$$ | sed "s/^.*: \(.*\)/\1/g" | tr '\012' '\t' >> /tmp/$filename
   sort /tmp/$filename -o $file
+  rm /tmp/$filename /tmp/ed$$
 }
 
 desplayopts () {
