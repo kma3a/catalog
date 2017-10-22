@@ -1,6 +1,16 @@
 filelocation=${CATALOG_LOCATION:=$HOME}
 filename=catalog
 file=$filelocation/$filename
+booktitle=;
+author=;
+genre=;
+readstatus=;
+
+add () {
+ echo "$booktitle\t$author\t$genre\t$readstatus" >> $file
+ sort -o $file $file
+}
+
 
 createfile () {
   if [ ! -e "$file" ] ; then
@@ -15,13 +25,27 @@ createfile () {
 }
 
 search () {
-  matches=$(grep -i "$1" $file)
-  display "$matches"
+  echo "IN the search"
+  matches=$(grep -i "$1" $file | sed -e /^$/d)
+  if [ "$matches" ] ; then
+    display "$matches"
+  else
+    echo "Could not find $1"
+  fi
 }
 
 removal () {
   grep -v "$1" $file > /tmp/$filename
   mv /tmp/$filename $file
+}
+
+desplayopts () {
+  echo "Usage: finalproject [-a] [-g] [-r] [-b]";
+  echo "-a adds the item to the list";
+  echo "-b specifies the author"
+  echo "-g specifies the genre";
+  echo "-r specifies if you have read the book";
+  exit 1
 }
 
 display () {
@@ -38,8 +62,6 @@ display () {
     currentlinenum=$(expr $currentlinenum + 1)
   done
 }
-
-
 
 editordelete () {
   echo "What is the would you like to $1? \c"
@@ -118,8 +140,7 @@ if [ "$#" = 0 ] ; then
            read genre
            echo "Have you read the book? (y/n) \c"
            read readstatus
-           echo "$booktitle\t$author\t$genre\t$readstatus" >> $file
-           sort -o $file $file
+           add
            echo "Would you like to add another book? (y/n) \c"
            read addanother
            if [ "$addanother" != "y" ] ; then
@@ -142,7 +163,26 @@ else
   if [ ! -e "$file" ] ; then
     exit 1
   fi
+  hasopts=
 
+  while getopts "a:b:g:r:" option
+  do
+    hasopts=true
+    case "$option"
+    in
+      a) booktitle="$OPTARG";;
+      b) author="$OPTARG";;
+      g) genre="$OPTARG";;
+      r) readstatus="$OPTARG";;
+      \?) desplayopts;;
+    esac
+  done
+
+  if [ -n "$hasopts" ] ; then
+    add
+  else
+    search "$*"
+  fi 
 fi
 
 
