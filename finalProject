@@ -112,13 +112,7 @@ editordelete () {
   fi
 }
 
-
-if [ "$#" = 0 ] ; then 
-  trap "" 2
-  valid_choice=
-
-  echo "Welcome to your book records!\n"
-
+menu () {
   until [ -n "$valid_choice" ]
   do 
     createfile
@@ -177,6 +171,15 @@ if [ "$#" = 0 ] ; then
       esac
 
   done
+}
+
+if [ "$#" = 0 ] ; then 
+  trap menu 2
+  valid_choice=
+
+  echo "Welcome to your book records!\n"
+
+  menu
 else
   if [ ! -e "$file" ] ; then
     exit 1
