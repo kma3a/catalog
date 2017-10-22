@@ -5,6 +5,7 @@ booktitle=;
 author=;
 genre=;
 readstatus=;
+editor=${EDITOR:=vi}
 
 add () {
  echo "$booktitle\t$author\t$genre\t$readstatus" >> $file
@@ -25,7 +26,6 @@ createfile () {
 }
 
 search () {
-  echo "IN the search"
   matches=$(grep -i "$1" $file | sed -e /^$/d)
   if [ "$matches" ] ; then
     display "$matches"
@@ -37,6 +37,16 @@ search () {
 removal () {
   grep -v "$1" $file > /tmp/$filename
   mv /tmp/$filename $file
+  rm /tmp/$filename
+}
+
+revise () {
+  echo "$1" | tr "\t" '\012' > /tmp/ed$$
+  $editor /tmp/ed$$
+  grep -v "^$1$" $file > /tmp/$filename
+  { tr '\012' '\t' < /tmp/ed$$; echo; } >> /tmp/$filename
+  sort /tmp/$filename -o $file
+  rm /tmp/$filename /tmp/ed$$
 }
 
 desplayopts () {
@@ -71,7 +81,7 @@ editordelete () {
   else
     matches=$(grep -i "$searchitem" $file)
     linenumber=$(echo "$matches" | wc -l)
-    if [ "$linenumber" -gt 1 ] ; then 
+    if [ "$matches" -a "$linenumber" -gt 1 ] ; then 
       currentlinenum=1
       foundmatch=
       while [ -z "$foundmatch" -a "$currentlinenum" -le "$linenumber" ] 
@@ -83,21 +93,28 @@ editordelete () {
         if [ "$answer" = "y" ] ; then
           if [ "$1" = "delete" ] ; then
             removal "$currentline"
+          else
+            revise "$currentline"
           fi
           foundmatch=TRUE
         fi
         currentlinenum=$(expr $currentlinenum + 1)
       done
-    else
+    elif [ "$matches" ] ; then 
       if [ "$1" = "delete" ] ; then
         removal "$matches"
+      else
+        revise "$matches"
       fi
+    else
+      echo "Could not find match for $searchitem"
     fi
   fi
 }
 
 
 if [ "$#" = 0 ] ; then 
+  trap "" 2
   valid_choice=
 
   echo "Welcome to your book records!\n"
@@ -147,6 +164,7 @@ if [ "$#" = 0 ] ; then
              finished=TRUE
            fi
         done;;
+      3) editordelete "edit";;
       4) editordelete "delete";;
       5) allbooks=$(grep "" "$file")
         display "$allbooks";;
